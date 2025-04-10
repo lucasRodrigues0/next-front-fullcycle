@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Download, CheckCircle } from "lucide-react"
+import { ArrowLeft, Download } from "lucide-react"
 import { cookies } from "next/headers";
 import { StatusBadge } from "@/components/status-badge";
 
