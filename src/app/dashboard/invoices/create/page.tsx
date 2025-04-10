@@ -170,7 +170,7 @@ export default function CreateInvoicePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push("/dashboard/invoices")}
                 className="bg-[#232d3f] hover:bg-[#2a3749] border-gray-700"
               >
                 Cancelar
