@@ -2,58 +2,46 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Download, CheckCircle } from "lucide-react"
+import { cookies } from "next/headers";
+import { StatusBadge } from "@/components/status-badge";
 
-interface InvoiceDetailsPageProps {
-  params: {
-    id: string
-  }
+export async function getInvoice(id: string) {
+  const cookiesStore = await cookies();
+  const apiKey = cookiesStore.get("apiKey")?.value;
+  const response = await fetch(`http://localhost:8080/invoice/${id}`, {
+    headers: {
+      "X-API-KEY": apiKey as string,
+    },
+    cache: 'force-cache',
+    next: {
+      tags: [`accounts/${apiKey}/invoices/${id}`]
+    },
+  });
+
+  return response.json();
 }
 
-export default function InvoiceDetailsPage({ params }: InvoiceDetailsPageProps) {
-  const invoiceId = `#${params.id}`
+export default async function InvoiceDetailsPage({ params }: { params: Promise<{ id: string }> }) {
 
-  // Dados de exemplo
-  const invoice = {
-    id: "#INV-001",
-    status: "aprovado",
-    createdAt: "30/03/2025 às 14:30",
-    value: "R$ 1.500,00",
-    description: "Compra Online #123",
-    creationDate: "30/03/2025 14:30",
-    lastUpdate: "30/03/2025 14:35",
-    paymentMethod: {
-      type: "Cartão de Crédito",
-      lastDigits: "**** **** **** 1234",
-      holder: "João da Silva",
-    },
-    transactionStatus: [
-      { status: "Fatura Criada", date: "30/03/2025 14:30" },
-      { status: "Pagamento Processado", date: "30/03/2025 14:32" },
-      { status: "Transação Aprovada", date: "30/03/2025 14:35" },
-    ],
-    additionalData: {
-      accountId: "ACC-12345",
-      clientIp: "192.168.1.1",
-      device: "Desktop - Chrome",
-    },
-  }
+  const { id } = await params;
 
+  const invoiceData = await getInvoice(id);
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="bg-[#1e293b] rounded-lg p-6 border border-gray-700">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/invoices">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+              <Link href="/dashboard/invoices">
                 <ArrowLeft size={20} />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold">Fatura {invoiceId}</h1>
-                <Badge className="bg-green-500 hover:bg-green-600">Aprovado</Badge>
+                <h1 className="text-2xl font-bold">Fatura {id}</h1>
+                <StatusBadge status={invoiceData.status} />
               </div>
-              <p className="text-gray-400">Criada em {invoice.createdAt}</p>
+              <p className="text-gray-400">Criada em {new Date(invoiceData.created_at).toLocaleDateString()}</p>
             </div>
           </div>
 
@@ -70,36 +58,36 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsPageProps) 
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-gray-400">ID da Fatura</span>
-                <span>{invoice.id}</span>
+                <span>{invoiceData.id}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-400">Valor</span>
-                <span>{invoice.value}</span>
+                <span>{invoiceData.amount}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-400">Data de Criação</span>
-                <span>{invoice.creationDate}</span>
+                <span>{new Date(invoiceData.created_at).toLocaleDateString()}</span>
               </div>
 
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-400">Última Atualização</span>
-                <span>{invoice.lastUpdate}</span>
-              </div>
+                <span>{new Date(invoiceData.updatedAt).toLocaleDateString()}</span>
+              </div> */}
 
               <div className="flex justify-between">
                 <span className="text-gray-400">Descrição</span>
-                <span>{invoice.description}</span>
+                <span>{invoiceData.description}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#232d3f] rounded-lg p-6">
+          {/* <div className="bg-[#232d3f] rounded-lg p-6">
             <h2 className="text-lg font-medium mb-4">Status da Transação</h2>
 
             <div className="space-y-6">
-              {invoice.transactionStatus.map((status, index) => (
+              {invoiceData.transactionStatus.map((status, index) => (
                 <div key={index} className="flex gap-3">
                   <div className="mt-0.5">
                     <CheckCircle size={20} className="text-green-500" />
@@ -111,7 +99,7 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsPageProps) 
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           <div className="bg-[#232d3f] rounded-lg p-6">
             <h2 className="text-lg font-medium mb-4">Método de Pagamento</h2>
@@ -119,41 +107,41 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsPageProps) 
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-gray-400">Tipo</span>
-                <span>{invoice.paymentMethod.type}</span>
+                <span>{invoiceData.payment_type === 'credit_card' ? 'Cartão de Crédito' : 'Outro'}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-400">Últimos Dígitos</span>
-                <span>{invoice.paymentMethod.lastDigits}</span>
+                <span>{invoiceData.card_last_digits}</span>
               </div>
 
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-400">Titular</span>
-                <span>{invoice.paymentMethod.holder}</span>
-              </div>
+                <span>{invoiceData.payment_type.holder}</span>
+              </div> */}
             </div>
           </div>
 
-          <div className="bg-[#232d3f] rounded-lg p-6">
+          {/* <div className="bg-[#232d3f] rounded-lg p-6">
             <h2 className="text-lg font-medium mb-4">Dados Adicionais</h2>
 
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-gray-400">ID da Conta</span>
-                <span>{invoice.additionalData.accountId}</span>
+                <span>{invoiceData.additionalData.accountId}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-400">IP do Cliente</span>
-                <span>{invoice.additionalData.clientIp}</span>
+                <span>{invoiceData.additionalData.clientIp}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-400">Dispositivo</span>
-                <span>{invoice.additionalData.device}</span>
+                <span>{invoiceData.additionalData.device}</span>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { InvoiceList } from "@/components/invoice-list"
+import { InvoiceList } from "./invoice-list"
 import { Plus } from "lucide-react"
 
 export default function InvoicesPage() {
